@@ -1,4 +1,6 @@
 import os
+import sys
+
 from flask import Flask, request, jsonify, abort
 from sqlalchemy import exc
 import json
@@ -10,7 +12,7 @@ from .auth.auth import AuthError, requires_auth
 app = Flask(__name__)
 setup_db(app)
 CORS(app)
-
+LIST_OF_DRINKS = ["drink1", "drink2", "drink3"]
 '''
 @TODO uncomment the following line to initialize the datbase
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
@@ -19,14 +21,9 @@ CORS(app)
 '''
 
 
-# db_drop_and_create_all()
+db_drop_and_create_all()
 
 # ROUTES
-@app.route("/")
-def hello():
-    return "Hello"
-
-
 '''
 @TODO implement endpoint
     GET /drinks
@@ -36,6 +33,14 @@ def hello():
         or appropriate status code indicating reason for failure
 '''
 
+
+@app.route("/drinks")
+def get_drinks():
+    drinks = [drink.short() for drink in Drink.query.all()]
+
+    return {"success": True, "drinks": drinks}
+
+
 '''
 @TODO implement endpoint
     GET /drinks-detail
@@ -44,6 +49,13 @@ def hello():
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+
+
+@app.route("/drinks-detail")
+def get_drink_details():
+    drinks = LIST_OF_DRINKS
+    return {"success": True, "drinks": drinks}
+
 
 '''
 @TODO implement endpoint
