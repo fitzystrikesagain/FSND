@@ -7,7 +7,7 @@ services:
     command: npm start
     container_name: node
     ports:
-      - "3000:3000"
+      - "4200:4200"
     volumes:
       - /app/node_modules
       - ./frontend:/app
@@ -16,7 +16,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-backend
-    command: flask run -h "0.0.0.0"
+    command: flask run -h "0.0.0.0" --reload
     container_name: coffee-shop
 #    depends_on:
 #      - postgres
