@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -22,19 +23,13 @@ LIST_OF_DRINKS = ["drink1", "drink2", "drink3"]
 
 db_drop_and_create_all()
 
+
 # ROUTES
-'''
-@TODO implement endpoint
-    GET /drinks
-        it should be a public endpoint
-        it should contain only the drink.short() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
-        or appropriate status code indicating reason for failure
-'''
-
-
 @app.route("/drinks")
 def get_drinks():
+    """
+    Publicly available. Returns a list of drinks.
+    """
     drinks = [drink.short() for drink in Drink.query.all()]
 
     return {"success": True, "drinks": drinks}
@@ -52,6 +47,10 @@ def get_drinks():
 
 @app.route("/drinks-detail")
 def get_drink_details():
+    """
+    Requires 'get:drinks-detail' permission. Returns long representation of
+    drinks, including recipes.
+    """
     drinks = [drink.long() for drink in Drink.query.all()]
     return {"success": True, "drinks": drinks}
 
@@ -69,7 +68,23 @@ def get_drink_details():
 
 @app.route("/drinks", methods=["POST"])
 def create_drink():
-    pass
+    """
+    Requires 'post:drinks' permission. Creates a new drink. Expects drink in
+    the format: {
+        "recipe": '[{"color": "yellow", "name":"lemonade", "parts":1}]',
+        "title": "lemonade"
+    }
+    """
+    body = request.get_json()
+    title = body.get("title")
+    recipe = body.get("recipe")
+    try:
+        drink = Drink(title=title, recipe=recipe)
+        drink.insert()
+        return jsonify({"success": True, "drinks": drink.long()})
+    except Exception as e:
+        print(e)
+        abort(422)
 
 
 '''
