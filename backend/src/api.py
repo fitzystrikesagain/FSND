@@ -17,9 +17,8 @@ LIST_OF_DRINKS = ["drink1", "drink2", "drink3"]
 @TODO uncomment the following line to initialize the datbase
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
-!! Running this funciton will add one
+!! Running this function will add one
 '''
-
 
 db_drop_and_create_all()
 
@@ -53,7 +52,7 @@ def get_drinks():
 
 @app.route("/drinks-detail")
 def get_drink_details():
-    drinks = LIST_OF_DRINKS
+    drinks = [drink.long() for drink in Drink.query.all()]
     return {"success": True, "drinks": drinks}
 
 
@@ -67,6 +66,12 @@ def get_drink_details():
         or appropriate status code indicating reason for failure
 '''
 
+
+@app.route("/drinks", methods=["POST"])
+def create_drink():
+    pass
+
+
 '''
 @TODO implement endpoint
     PATCH /drinks/<id>
@@ -79,6 +84,12 @@ def get_drink_details():
         or appropriate status code indicating reason for failure
 '''
 
+
+@app.route("/drinks/<int:drink_id>", methods=["PATCH"])
+def update_drink(drink_id):
+    pass
+
+
 '''
 @TODO implement endpoint
     DELETE /drinks/<id>
@@ -89,6 +100,12 @@ def get_drink_details():
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
+
+
+@app.route("/drinks/<int:drink_id>", methods=["DELETE"])
+def remove_drink(drink_id):
+    pass
+
 
 # Error Handling
 '''
@@ -105,23 +122,19 @@ def unprocessable(error):
     }), 422
 
 
-'''
-@TODO implement error handlers using the @app.errorhandler(error) decorator
-    each error handler should return (with approprate messages):
-             jsonify({
-                    "success": False,
-                    "error": 404,
-                    "message": "resource not found"
-                    }), 404
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        "success": False,
+        "error": 404,
+        "message": "resource not found"
+    }), 404
 
-'''
 
-'''
-@TODO implement error handler for 404
-    error handler should conform to general task above
-'''
-
-'''
-@TODO implement error handler for AuthError
-    error handler should conform to general task above
-'''
+@app.errorhandler(401)
+def not_authorized(error):
+    return jsonify({
+        "success": False,
+        "error": 401,
+        "message": "authorization required"
+    }), 401
