@@ -1,8 +1,0 @@
-FROM node:alpine
-WORKDIR '/app'
-COPY frontend/package.json .
-RUN npm install
-RUN npm update
-RUN npm install -g @ionic/cli
-RUN apk add curl
-COPY frontend .
