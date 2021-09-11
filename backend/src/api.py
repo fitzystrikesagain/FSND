@@ -36,7 +36,8 @@ def get_drinks():
 
 
 @app.route("/drinks-detail")
-def get_drink_details():
+@requires_auth("get:drinks-detail")
+def get_drink_details(payload):
     """
     Requires 'get:drinks-detail' permission. Returns long representation of
     drinks, including recipes.
