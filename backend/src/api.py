@@ -53,8 +53,9 @@ def get_drink_details():
 def create_drink():
     """
     Requires 'post:drinks' permission. Creates a new drink. Expects drink in
-    the format: {
-        "recipe": '[{"color": "yellow", "name":"lemonade", "parts":1}]',
+    the format:
+    {
+        "recipe": "[{\"color\": \"yellow\", \"lemonade\": \"lemonade\", \"parts\":1}]",
         "title": "lemonade"
     }
     """
@@ -75,7 +76,7 @@ def update_drink(drink_id):
     """
     Requires 'patch:drinks' permission. Updates a drink record
     """
-    drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
+    drink = Drink.query.get(drink_id)
     if not drink:
         abort(404)
     try:
@@ -83,7 +84,6 @@ def update_drink(drink_id):
         drink.title = body.get("title")
         drink.recipe = body.get("recipe")
         drink.update()
-        print(body)
         return jsonify({"success": True, "drinks": drink.long()})
     except Exception as e:
         print(e)
