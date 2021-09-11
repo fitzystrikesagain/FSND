@@ -4,9 +4,9 @@ from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 
-AUTH0_DOMAIN = 'udacity-fsnd.auth0.com'
-ALGORITHMS = ['RS256']
-API_AUDIENCE = 'dev'
+AUTH0_DOMAIN = "dev-p498f049.us.auth0.com"
+ALGORITHMS = ["RS256"]
+API_AUDIENCE = "drinks"
 
 # AuthError Exception
 '''
@@ -29,47 +29,62 @@ def get_token_auth_header():
     """
     auth_header = request.headers.get("Authorization")
     if not auth_header:
-        raise AuthError
+        raise AuthError("Missing headers", 401)
     header_parts = auth_header.split(" ")
     if header_parts[0] != "header" or len(header_parts) != 2:
-        raise AuthError
+        raise AuthError("Malformed headers or missing token", 401)
     return header_parts[1]
 
 
-'''
-@TODO implement check_permissions(permission, payload) method
-    @INPUTS
-        permission: string permission (i.e. 'post:drink')
-        payload: decoded jwt payload
-
-    it should raise an AuthError if permissions are not included in the payload
-        !!NOTE check your RBAC settings in Auth0
-    it should raise an AuthError if the requested permission string is not in the payload permissions array
-    return true otherwise
-'''
-
-
 def check_permissions(permission, payload):
-    raise Exception('Not Implemented')
-
-
-'''
-@TODO implement verify_decode_jwt(token) method
-    @INPUTS
-        token: a json web token (string)
-
-    it should be an Auth0 token with key id (kid)
-    it should verify the token using Auth0 /.well-known/jwks.json
-    it should decode the payload from the token
-    it should validate the claims
-    return the decoded payload
-
-    !!NOTE urlopen has a common certificate error described here: https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
-'''
+    """
+    Checks if permissions are included in the payload, otherwises raises an
+    AuthError
+    :param permission: string permission (i.e. 'post:drink')
+    :param payload: decoded jwt payload
+    """
+    if "permissions" not in payload:
+        raise AuthError("Missing permissions", 401)
+    permissions = payload.get("permissions")
+    if not permissions or permission not in permissions:
+        raise AuthError("Insufficient permissions", 403)
+    return True
 
 
 def verify_decode_jwt(token):
-    raise Exception('Not Implemented')
+    """
+    Validates a JWT to ensure it:
+    - is an Auth0 token with key id (kid)
+    - is verified using Auth0 /.well-known/jwks.json
+    - uses valid claims
+    :return: decoded payload
+    """
+    url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
+    keyset = json.loads(urlopen(url).read())["keys"]
+    unverified_header = jwt.get_unverified_header(token)
+    rsa = None
+    if "kid" not in unverified_header.keys():
+        raise AuthError("Invalid header", 401)
+    for key in keyset:
+        if key["kid"] == unverified_header["kid"]:
+            rsa = {
+                "e": key["e"],
+                "kid": key["kid"],
+                "kty": key["kty"],
+                "n": key["n"],
+                "use": key["use"],
+            }
+    try:
+        if rsa:
+            return jwt.decode(
+                token,
+                json.dumps(rsa),
+                algorithms=ALGORITHMS,
+                audience=API_AUDIENCE,
+                issuer=f"https://{AUTH0_DOMAIN}/"
+            )
+    except Exception as e:
+        raise AuthError(e, 401)
 
 
 '''
