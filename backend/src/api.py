@@ -35,35 +35,18 @@ def get_drinks():
     return {"success": True, "drinks": drinks}
 
 
-'''
-@TODO implement endpoint
-    GET /drinks-detail
-        it should require the 'get:drinks-detail' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
-        or appropriate status code indicating reason for failure
-'''
-
-
 @app.route("/drinks-detail")
 def get_drink_details():
     """
     Requires 'get:drinks-detail' permission. Returns long representation of
     drinks, including recipes.
     """
-    drinks = [drink.long() for drink in Drink.query.all()]
-    return {"success": True, "drinks": drinks}
-
-
-'''
-@TODO implement endpoint
-    POST /drinks
-        it should create a new row in the drinks table
-        it should require the 'post:drinks' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
-        or appropriate status code indicating reason for failure
-'''
+    try:
+        drinks = [drink.long() for drink in Drink.query.all()]
+        return {"success": True, "drinks": drinks}
+    except Exception as e:
+        print(e)
+        abort(422)
 
 
 @app.route("/drinks", methods=["POST"])
@@ -107,29 +90,23 @@ def update_drink(drink_id):
         abort(422)
 
 
-'''
-@TODO implement endpoint
-    DELETE /drinks/<id>
-        where <id> is the existing model id
-        it should respond with a 404 error if <id> is not found
-        it should delete the corresponding row for <id>
-        it should require the 'delete:drinks' permission
-    returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
-        or appropriate status code indicating reason for failure
-'''
-
-
 @app.route("/drinks/<int:drink_id>", methods=["DELETE"])
 def remove_drink(drink_id):
-    pass
+    """
+    Requires 'delete:drinks' permission. Deletes a drink.
+    """
+    drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
+    if not drink:
+        abort(404)
+    try:
+        drink.delete()
+        return jsonify({"success": True, "delete": drink_id})
+    except Exception as e:
+        print(e)
+        abort(422)
 
 
 # Error Handling
-'''
-Example error handling for unprocessable entity
-'''
-
-
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
