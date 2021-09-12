@@ -44,7 +44,7 @@ def check_permissions(permission, payload):
     :param payload: decoded jwt payload
     """
     if not payload or "permissions" not in payload:
-        raise AuthError({"status": 401, "error": "Missing permissions"}, 401)
+        raise AuthError({"status": 403, "error": "Missing permissions"}, 403)
     permissions = payload.get("permissions")
     if not permissions or permission not in permissions:
         raise AuthError({"status": 403, "error": "Insufficient permissions"},

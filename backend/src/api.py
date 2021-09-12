@@ -8,14 +8,11 @@ from .auth.auth import AuthError, requires_auth
 app = Flask(__name__)
 setup_db(app)
 CORS(app)
-LIST_OF_DRINKS = ["drink1", "drink2", "drink3"]
-'''
-@TODO uncomment the following line to initialize the datbase
+
+"""
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
-!! Running this function will add one
-'''
-
+"""
 db_drop_and_create_all()
 
 
@@ -68,7 +65,7 @@ def create_drink(payload):
     try:
         drink = Drink(title=title, recipe=json.dumps(recipe))
         drink.insert()
-        return jsonify({"success": True, "drinks": drink.long()})
+        return jsonify({"success": True, "drinks": [drink.long()]})
     except Exception as e:
         print(e)
         abort(422)
@@ -89,9 +86,11 @@ def update_drink(payload, drink_id):
         if "title" in body.keys():
             drink.title = body["title"]
         if "recipe" in body.keys():
+            recipe = body["recipe"]
+            drink.recipe = recipe if type(recipe) == str else json.dumps(recipe)
             drink.recipe = body["recipe"]
         drink.update()
-        return jsonify({"success": True, "drinks": drink.long()})
+        return jsonify({"success": True, "drinks": [drink.long()]})
     except Exception as e:
         print(e)
         abort(422)
