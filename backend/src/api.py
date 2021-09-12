@@ -1,9 +1,4 @@
-import logging
-import os
-import sys
-
 from flask import Flask, request, jsonify, abort
-from sqlalchemy import exc
 import json
 from flask_cors import CORS
 
@@ -51,20 +46,27 @@ def get_drink_details(payload):
 
 
 @app.route("/drinks", methods=["POST"])
-def create_drink():
+@requires_auth("post:drinks")
+def create_drink(payload):
     """
     Requires 'post:drinks' permission. Creates a new drink. Expects drink in
     the format:
-    {
-        "recipe": "[{\"color\": \"yellow\", \"lemonade\": \"lemonade\", \"parts\":1}]",
-        "title": "lemonade"
-    }
     """
+    d = {
+        "recipe": [
+            {
+                "color": "blue",
+                "name": "water",
+                "parts": 1
+            }
+        ],
+        "title": "water"
+    }
     body = request.get_json()
     title = body.get("title")
     recipe = body.get("recipe")
     try:
-        drink = Drink(title=title, recipe=recipe)
+        drink = Drink(title=title, recipe=json.dumps(recipe))
         drink.insert()
         return jsonify({"success": True, "drinks": drink.long()})
     except Exception as e:
@@ -73,17 +75,21 @@ def create_drink():
 
 
 @app.route("/drinks/<int:drink_id>", methods=["PATCH"])
-def update_drink(drink_id):
+@requires_auth("patch:drinks")
+def update_drink(payload, drink_id):
     """
     Requires 'patch:drinks' permission. Updates a drink record
     """
     drink = Drink.query.get(drink_id)
+
     if not drink:
         abort(404)
     try:
         body = request.get_json()
-        drink.title = body.get("title")
-        drink.recipe = body.get("recipe")
+        if "title" in body.keys():
+            drink.title = body["title"]
+        if "recipe" in body.keys():
+            drink.recipe = body["recipe"]
         drink.update()
         return jsonify({"success": True, "drinks": drink.long()})
     except Exception as e:
@@ -92,7 +98,8 @@ def update_drink(drink_id):
 
 
 @app.route("/drinks/<int:drink_id>", methods=["DELETE"])
-def remove_drink(drink_id):
+@requires_auth("delete:drinks")
+def remove_drink(payload, drink_id):
     """
     Requires 'delete:drinks' permission. Deletes a drink.
     """
@@ -126,10 +133,10 @@ def not_found(error):
     }), 404
 
 
-@app.errorhandler(401)
-def not_authorized(error):
+@app.errorhandler(AuthError)
+def auth_error(error):
     return jsonify({
         "success": False,
-        "error": 401,
-        "message": "authorization required"
-    }), 401
+        "error": error.status_code,
+        "message": error.error
+    }), error.status_code

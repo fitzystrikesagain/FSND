@@ -29,9 +29,9 @@ def get_token_auth_header():
     """
     auth_header = request.headers.get("Authorization")
     if not auth_header:
-        raise AuthError("Missing headers", 401)
+        raise AuthError({"status": 401, "error": "Missing headers"}, 401)
     header_parts = auth_header.split(" ")
-    if header_parts[0] != "header" or len(header_parts) != 2:
+    if header_parts[0].lower() != "bearer" or len(header_parts) != 2:
         raise AuthError("Malformed headers or missing token", 401)
     return header_parts[1]
 
@@ -43,11 +43,12 @@ def check_permissions(permission, payload):
     :param permission: string permission (i.e. 'post:drink')
     :param payload: decoded jwt payload
     """
-    if "permissions" not in payload:
-        raise AuthError("Missing permissions", 401)
+    if not payload or "permissions" not in payload:
+        raise AuthError({"status": 401, "error": "Missing permissions"}, 401)
     permissions = payload.get("permissions")
     if not permissions or permission not in permissions:
-        raise AuthError("Insufficient permissions", 403)
+        raise AuthError({"status": 403, "error": "Insufficient permissions"},
+                        403)
     return True
 
 
@@ -84,7 +85,7 @@ def verify_decode_jwt(token):
                 issuer=f"https://{AUTH0_DOMAIN}/"
             )
     except Exception as e:
-        raise AuthError(e, 401)
+        raise AuthError({"status": 401, "error": e}, 401)
 
 
 '''
